@@ -1,0 +1,291 @@
+import mysql.connector
+from tkinter import *
+from tkinter import ttk
+import tkinter as tk
+from tkinter import messagebox
+import webbrowser
+
+mysqldb = mysql.connector.connect(host="localhost", user="root", password="ranga143", database="village")
+mycursor = mysqldb.cursor()
+def Ok():
+    global uname
+    uname = e1.get()
+    password = e2.get()
+    sql = "select * from user where uname = %s and password = %s"
+    mycursor.execute(sql, [(uname), (password)])
+    results = mycursor.fetchall()
+ 
+    if results:
+        r1.destroy()
+        messagebox.showinfo("","Login Successfull")
+        Admin()
+    else :
+        r1.destroy()
+        messagebox.showinfo("","Incorrent Username and Password")
+    
+ 
+def Admin():
+   root = Toplevel()
+   root.title("VILLAGE PROFILE")
+   root.geometry("300x330")
+   bg1= PhotoImage(file="12.png")
+   background = Label(root, image=bg1)
+   background.pack() 
+
+   Label(root, text="VILLAGE PROFILE",font=("Arial", 15, "bold"), bg="#00376b", fg="#FFFCF9").place(x=60, y=10)
+   Label(root, text="VILLAGE NAME").place(x=10, y=60)
+   Label(root, text="HOUSE NUMBER").place(x=10, y=83)
+   Label(root, text="NAME").place(x=10, y=106)
+   Label(root, text="AGE").place(x=10, y=129)
+   Label(root, text="GENDER").place(x=10, y=152)
+   Label(root, text="OLD NAME(ONLY FOR MODIFY)").place(x=10, y=175)
+   Label(root, text="NOTE:For deletion enter only Name and House number").place(x=0, y=260)
+   Label(root, text="**For modiication of village name enter only").place(x=21, y=280)
+   Label(root, text="village name and House number").place(x=35, y=298)
+   
+   global vn,hn,na,ag,gen,on
+   vn = Entry(root,bd=2)
+   vn.place(x=110, y=60)
+   hn = Entry(root,bd=2)
+   hn.place(x=110, y=83)
+   na = Entry(root,bd=2)
+   na.place(x=110, y=106)
+   ag = Entry(root,bd=2)
+   ag.place(x=110, y=129)
+   gen = Entry(root,bd=2)
+   gen.place(x=110, y=152)
+   on = Entry(root,bd=2)
+   on.place(x=30, y=199)
+
+   def clr():
+    vn.delete(0,END)
+    hn.delete(0,END)
+    na.delete(0,END)
+    ag.delete(0,END)
+    gen.delete(0,END)
+    on.delete(0,END)
+   Button(root, text="Create", command=lambda:[create(),clr()],height = 1, bd=3,width = 8,bg='sky blue',relief='raised').place(x=10, y=225)
+   Button(root, text="Modify", command=lambda:[modify(),clr()], height = 1,bd=3, width = 8,relief='raised',bg="pink").place(x=80, y=225)
+   Button(root, text="Delete", command=lambda:[delete(),clr()], height = 1,bd=3, width = 8,relief='raised',bg="wheat2").place(x=150, y=225)
+   Button(root, text="Logout", command=root.destroy, height = 1, width = 8,bd=3,bg='red2',relief='raised').place(x=220, y=225)
+
+   root.mainloop()
+
+
+def login():
+ global r1
+ root = Toplevel()
+ r1=root
+ root.title("VILLAGE PROFILE")
+ root.geometry("300x200")
+ bg1= PhotoImage(file="14.png")
+ background = Label(root, image=bg1)
+ background.pack()
+ global e1
+ global e2
+ 
+ Label(root, text="VILLAGE PROFILE",font=("Arial", 15, "bold"), bg="#00376b", fg="#FFFCF9").place(x=60, y=10)
+ Label(root, text="UserName").place(x=30, y=60)
+ Label(root, text="Password").place(x=30, y=90)
+
+ e1 = Entry(root,bd=4)
+ e1.place(x=100, y=60)
+ 
+ e2 = Entry(root,bd=4)
+ e2.place(x=100, y=90)
+ e2.config(show="*")
+ Button(root, text="Login", command=Ok,height = 2, width = 13,bg='#4a7abc',fg='yellow',
+    activebackground='green',activeforeground='white').place(x=120, y=120)
+ 
+ root.mainloop() 
+
+def create():
+   vname=vn.get()
+   hono=hn.get()
+   nam=na.get()
+   ages=ag.get()
+   gend=gen.get()
+  
+   try: 
+    sql = "select houseno from house where houseno=%s"
+    mycursor.execute(sql,[(hono)])
+    results = mycursor.fetchall()
+   
+    if results:
+       print()
+    else:
+     sql1 = "INSERT INTO house (houseno,vilname,uid) VALUES (%s, %s,%s)"
+     val1 = (hono,vname,uname)
+     mycursor.execute(sql1, val1)
+     mysqldb.commit()
+
+    sql2 = "INSERT IGNORE INTO people (name,age,gender,hno) VALUES (%s, %s,%s,%s)"
+    val2=(nam,ages,gend,hono)
+    mycursor.execute(sql2, val2) 
+    mysqldb.commit()
+   except mysql.connector.Error as err:
+    print("Something went wrong: {}".format(err))
+   messagebox.showinfo("","Inserted Successfully")
+
+def modify():
+ vname=vn.get()
+ hono=hn.get()
+ nam=na.get()
+ ages=ag.get()
+ gend=gen.get()
+ ona=on.get()
+ sql1="UPDATE house SET vilname= %s WHERE houseno=%s"
+ mycursor.execute(sql1,[(vname),(hono)])
+ mysqldb.commit()
+ 
+ sql2="UPDATE people SET name=%s,age=%s,gender=%s WHERE hno=%s AND name=%s"
+ mycursor.execute(sql2,[(nam),(ages),(gend),(hono),(ona)])
+ mysqldb.commit()
+ messagebox.showinfo("","Updated Successfully")
+
+def delete():
+ hono=hn.get()
+ nam=na.get()
+ sql1="DELETE FROM people WHERE name=%s AND hno=%s"
+ mycursor.execute(sql1,[(nam),(hono)])
+ mysqldb.commit()
+ messagebox.showinfo("","Deleted Successfully")
+
+def disp():
+ root = Tk()
+ root.title("VILLAGE PROFILE")
+ root.geometry("520x370")
+ Label(root, text="VILLAGE PROFILE",font=("Arial", 15, "bold"), bg="#00376b", fg="#FFFCF9").pack(pady=6)
+
+ style=ttk.Style(root)
+ style.theme_use("clam")
+ style.configure("Treeview",background="cyan2",foreground="black",rowheight=25,filebackground="silver")
+ style.map('Treeview',background=[("selected","green")])
+
+ tree =ttk.Treeview(root, column=("c1", "c2", "c3","c4","c5"), show='headings',height='7')
+ tree.column("#1", anchor=tk.CENTER, width=100)
+ tree.heading("#1", text="Village name")
+ tree.column("#2", anchor=tk.CENTER, width=100)
+ tree.heading("#2", text="House.no")
+ tree.column("#3", anchor=tk.CENTER, width=100)
+ tree.heading("#3", text="Name")
+ tree.column("#4", anchor=tk.CENTER, width=100)  
+ tree.heading("#4", text="Age")
+ tree.column("#5", anchor=tk.CENTER, width=100)
+ tree.heading("#5", text="Gender")
+ tree.pack() 
+ tree.place(x=7,y=45)
+
+ sql = "SELECT vilname,houseno,name ,age,gender FROM village.house, village.people where houseno= hno order by houseno asc"
+ mycursor.execute(sql)
+ rows = mycursor.fetchall()    
+ for row in rows:
+    tree.insert("", tk.END, values=row)
+ 
+ T = Text(root, height = 6, width = 33,font =("Times", 11),bg ="azure")
+ T.place(x=150,y=255)
+ sql = "SELECT count(*)FROM village.house;"
+ mycursor.execute(sql)
+ r1 = mycursor.fetchone()[0]
+ T.insert(tk.END,"*Total Number of Houses:")
+ T.insert(tk.END,r1)
+
+ sql = "SELECT count(*) FROM village.people"
+ mycursor.execute(sql)
+ r2 = mycursor.fetchone()[0]
+ T.insert(tk.END,"\n*Total Number of peoples:")
+ T.insert(tk.END,r2)
+ 
+ sql = "SELECT count(*)FROM village.people where gender like 'male%'"
+ mycursor.execute(sql)
+ r3 = mycursor.fetchone()[0]
+ T.insert(tk.END,"\n*Number of Males:")
+ T.insert(tk.END,r3)
+ 
+ sql = "SELECT count(*)FROM village.people where gender like 'female%'"
+ mycursor.execute(sql)
+ r4 = mycursor.fetchone()[0]
+ T.insert(tk.END,"\n*Number of Females:")
+ T.insert(tk.END,r4)
+ 
+ sql = "SELECT count(*) FROM village.people where age<=18"
+ mycursor.execute(sql)
+ r5 = mycursor.fetchone()[0]
+ T.insert(tk.END,"\n*Number of Below 18 aged people:")
+ T.insert(tk.END,r5)
+ 
+ sql = "SELECT count(*) FROM village.people where age>18"
+ mycursor.execute(sql)
+ r6 = mycursor.fetchone()[0]
+ T.insert(tk.END,"\n*Number of Above 18 aged people:")
+ T.insert(tk.END,r6)
+ #verscrlbar =ttk.Scrollbar(root,orient ="vertical",command = tree.yview)
+ #verscrlbar.pack(side="right",fill="y" )
+ #tree.configure(xscrollcommand = verscrlbar.set)
+
+ root.mainloop()   
+
+def ser():
+   root = Toplevel()
+   root.title("VILLAGE PROFILE")
+   root.geometry("500x300")
+   Label(root, text="VILLAGE PROFILE",font=("Arial", 15, "bold"), bg="#00376b", fg="#FFFCF9").pack(pady=8)
+
+   Label(root, text="ENTER HOUSE NUMBER").pack()
+   hn1 = Entry(root,bd=2)
+   hn1.pack()
+
+   def View():
+    hn2=hn1.get()
+    sql = "SELECT vilname,houseno,name ,age,gender FROM village.house, village.people where houseno= hno and hno=%s"
+    mycursor.execute(sql,[(hn2)])
+    rows = mycursor.fetchall()    
+    for row in rows:
+       tree.insert("", tk.END, values=row)
+
+   style=ttk.Style(root)
+   style.theme_use("clam")
+   style.configure("Treeview",background="thistle1",foreground="black")
+   style.map('Treeview',background=[("selected","green")])
+
+   tree =ttk.Treeview(root, column=("c1", "c2", "c3","c4","c5"), show='headings',height=5)
+   tree.column("#1", anchor=tk.CENTER, width=100)
+   tree.heading("#1", text="Village name")
+   tree.column("#2", anchor=tk.CENTER, width=100)
+   tree.heading("#2", text="House.no")
+   tree.column("#3", anchor=tk.CENTER, width=100)
+   tree.heading("#3", text="Name")
+   tree.column("#4", anchor=tk.CENTER, width=100)  
+   tree.heading("#4", text="Age")
+   tree.column("#5", anchor=tk.CENTER, width=100)
+   tree.heading("#5", text="Gender")
+   tree.pack(pady=12)     
+
+   Button(root, text="Search", command=View,bd=3, height = 1, width = 13).pack(pady=12)
+   root.mainloop()    
+
+def schem():
+  webbrowser.open("https://laxeg57714.wixsite.com/my-site-1")
+  
+def job():
+  webbrowser.open("https://laxeg57714.wixsite.com/my-site")
+
+
+def main():
+ root = Tk()
+ root.title("VILLAGE PROFILE")
+ root.geometry("300x250")
+ bg1= PhotoImage(file="12.png")
+ background = Label(root, image=bg1)
+ background.pack()
+ 
+ Label(root, text="VILLAGE PROFILE",font=("Arial", 15, "bold"), bg="#00376b", fg="#FFFCF9").place(x=60, y=10)
+ Button(root, text="Admin portal", command=login,bd=3, height = 1, width = 13).place(x=100, y=50)
+ Button(root, text="Display", command=disp,bd=3, height = 1, width = 13).place(x=100, y=80)
+ Button(root, text="Search", command=ser,bd=3, height = 1, width = 13).place(x=100, y=110)
+ Button(root, text="Government schemes",bd=3, command=schem, height = 1, width = 20).place(x=75, y=140)
+ Button(root, text="Government Jobs",bd=3, command=job, height = 1, width = 20).place(x=75, y=170)
+ Button(root, text="EXIT", command=exit,bd=3, height = 1, width = 13).place(x=100, y=200)
+ root.mainloop()  
+main()
+
